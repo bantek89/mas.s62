@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"math/rand"
 )
 
 /*
@@ -81,42 +80,6 @@ endian encoding described here.
 // The Forge function is tested by TestForgery() in forge_test.go, so if you
 // run "go test" and everything passes, you should be all set.
 
-// func join(strs ...string) string {
-// 	var sb strings.Builder
-// 	for _, str := range strs {
-// 		sb.WriteString(str)
-// 	}
-// 	return sb.String()
-// }
-
-func generateChar() string {
-	randomChar := 'a' + rune(rand.Intn(26))
-	return string(randomChar)
-}
-
-func containsEmpty(s [256]Block) bool {
-	for _, v := range s {
-		if v == BlockFromByteSlice(make([]byte, 32)) {
-			return true
-		}
-	}
-
-	return false
-}
-
-func GenerateForgedString(sec SecretKey) string {
-	s := generateChar()
-	msg := GetMessageFromString(s)
-	sig := Sign(msg, sec)
-
-	if !containsEmpty(sig.Preimage) {
-
-		return s
-	}
-
-	return GenerateForgedString(sec)
-}
-
 func Forge() (string, Signature, error) {
 	// decode pubkey, all 4 signatures into usable structures from hex strings
 	pub, err := HexToPubkey(hexPubkey1)
@@ -159,12 +122,10 @@ func Forge() (string, Signature, error) {
 	fmt.Printf("ok 3: %v\n", Verify(msgslice[2], pub, sig3))
 	fmt.Printf("ok 4: %v\n", Verify(msgslice[3], pub, sig4))
 
-	msgString := "my forged message"
+	msgStringTemplate := "forgery banna "
+	var msgString string
+	var msg Message
 	var sig Signature
-
-	// your code here!
-	// ==
-	// Geordi La
 
 	var sec SecretKey
 
@@ -186,13 +147,14 @@ func Forge() (string, Signature, error) {
 		}
 	}
 
-	// ch := make(chan string)
-
-	msgString = GenerateForgedString(sec)
-
-	// msgString = <-ch
-
-	// ==
+	for i := 0; ; i++ {
+		msgString = msgStringTemplate + fmt.Sprint(i)
+		msg = GetMessageFromString(msgString)
+		sig = Sign(msg, sec)
+		if Verify(msg, pub, sig) {
+			break
+		}
+	}
 
 	return msgString, sig, nil
 
