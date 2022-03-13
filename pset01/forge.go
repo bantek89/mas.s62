@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"math/rand"
+)
 
 /*
 A note about the provided keys and signatures:
@@ -77,6 +80,43 @@ endian encoding described here.
 // signatures.go file.
 // The Forge function is tested by TestForgery() in forge_test.go, so if you
 // run "go test" and everything passes, you should be all set.
+
+// func join(strs ...string) string {
+// 	var sb strings.Builder
+// 	for _, str := range strs {
+// 		sb.WriteString(str)
+// 	}
+// 	return sb.String()
+// }
+
+func generateChar() string {
+	randomChar := 'a' + rune(rand.Intn(26))
+	return string(randomChar)
+}
+
+func containsEmpty(s [256]Block) bool {
+	for _, v := range s {
+		if v == BlockFromByteSlice(make([]byte, 32)) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func GenerateForgedString(sec SecretKey) string {
+	s := generateChar()
+	msg := GetMessageFromString(s)
+	sig := Sign(msg, sec)
+
+	if !containsEmpty(sig.Preimage) {
+
+		return s
+	}
+
+	return GenerateForgedString(sec)
+}
+
 func Forge() (string, Signature, error) {
 	// decode pubkey, all 4 signatures into usable structures from hex strings
 	pub, err := HexToPubkey(hexPubkey1)
@@ -125,6 +165,33 @@ func Forge() (string, Signature, error) {
 	// your code here!
 	// ==
 	// Geordi La
+
+	var sec SecretKey
+
+	for _, msg := range msgslice {
+		for i := range [256]int{} {
+			if (msg[i/8]>>(7-(i%8)))&0x01 == 0 {
+				for _, sig := range sigslice {
+					if sig.Preimage[i].IsPreimage(pub.ZeroHash[i]) {
+						sec.ZeroPre[i] = sig.Preimage[i]
+					}
+				}
+			} else {
+				for _, sig := range sigslice {
+					if sig.Preimage[i].IsPreimage(pub.OneHash[i]) {
+						sec.OnePre[i] = sig.Preimage[i]
+					}
+				}
+			}
+		}
+	}
+
+	// ch := make(chan string)
+
+	msgString = GenerateForgedString(sec)
+
+	// msgString = <-ch
+
 	// ==
 
 	return msgString, sig, nil

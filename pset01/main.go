@@ -21,6 +21,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -110,7 +111,7 @@ func HexToPubkey(s string) (PublicKey, error) {
 	// first, make sure hex string is of correct length
 	if len(s) != expectedLength {
 		return p, fmt.Errorf(
-			"Pubkey string %d characters, expect %d", expectedLength)
+			"Pubkey string %d characters, expect %d", len(s), expectedLength)
 	}
 
 	// decode from hex to a byte slice
@@ -188,7 +189,7 @@ func HexToSignature(s string) (Signature, error) {
 	// first, make sure hex string is of correct length
 	if len(s) != expectedLength {
 		return sig, fmt.Errorf(
-			"Pubkey string %d characters, expect %d", expectedLength)
+			"Pubkey string %d characters, expect %d", len(s), expectedLength)
 	}
 
 	// decode from hex to a byte slice
@@ -223,9 +224,31 @@ func GenerateKey() (SecretKey, PublicKey, error) {
 	// Your code here
 	// ===
 
+	a := make([]byte, 32)
+	b := make([]byte, 32)
+
+	for i := range sec.ZeroPre {
+		rand.Read(a)
+		sec.ZeroPre[i] = BlockFromByteSlice(a)
+		pub.ZeroHash[i] = sec.ZeroPre[i].Hash()
+	}
+
+	for i := range sec.OnePre {
+		rand.Read(b)
+		sec.OnePre[i] = BlockFromByteSlice(b)
+		pub.OneHash[i] = sec.OnePre[i].Hash()
+	}
+
 	// ===
+
 	return sec, pub, nil
 }
+
+// func CheckError(e error) {
+// 	if e != nil {
+// 		fmt.Println(e)
+// 	}
+// }
 
 // Sign takes a message and secret key, and returns a signature.
 func Sign(msg Message, sec SecretKey) Signature {
@@ -234,8 +257,41 @@ func Sign(msg Message, sec SecretKey) Signature {
 	// Your code here
 	// ===
 
+	// Loop over all bits in the uint.
+	// for _, b := range msgHash {
+	// 	for i := 0; i < 8; i++ {
+	// 		bit += 1
+
+	// 		if b&(1<<uint(i)) == 0 {
+	// 			sig.Preimage[bit-1] = sec.ZeroPre[bit-1]
+	// 			// fmt.Print("b:", b, " (1 << uint(i)):", (1 << uint(i)), " i:", i, " TRUE", "\n")
+	// 		} else {
+	// 			sig.Preimage[bit-1] = sec.OnePre[bit-1]
+	// 			// fmt.Print("b:", b, " (1 << uint(i)):", (1 << uint(i)), " i:", i, "\n")
+	// 		}
+	// 	}
+	// }
+
+	for i := range [256]int{} {
+		if (msg[i/8]>>(7-(i%8)))&0x01 == 0 {
+			sig.Preimage[i] = sec.ZeroPre[i]
+		} else {
+			sig.Preimage[i] = sec.OnePre[i]
+		}
+	}
+
 	// ===
 	return sig
+}
+
+func contains(s [256]bool) bool {
+	for _, v := range s {
+		if v == false {
+			return false
+		}
+	}
+
+	return true
 }
 
 // Verify takes a message, public key and signature, and returns a boolean
@@ -245,7 +301,39 @@ func Verify(msg Message, pub PublicKey, sig Signature) bool {
 	// Your code here
 	// ===
 
+	var verify [256]bool
+
+	// for _, b := range hash {
+	// 	for i := 0; i < 8; i++ {
+	// 		bit += 1
+	// 		hashedSig := sha256.Sum256(sig.Preimage[bit-1][:])
+	// 		if b&(1<<uint(i)) == 0 {
+	// 			if hashedSig == pub.ZeroHash[bit-1] {
+	// 				verify[bit-1] = true
+	// 			}
+	// 		} else {
+	// 			if hashedSig == pub.OneHash[bit-1] {
+	// 				verify[bit-1] = true
+	// 			}
+	// 		}
+	// 	}
+	// }
+
+	for i := range [256]int{} {
+		hashedSig := sig.Preimage[i].Hash()
+		if (msg[i/8]>>(7-(i%8)))&0x01 == 0 {
+			if hashedSig == pub.ZeroHash[i] {
+				verify[i] = true
+			}
+		} else {
+			if hashedSig == pub.OneHash[i] {
+				verify[i] = true
+			}
+		}
+
+	}
+
 	// ===
 
-	return true
+	return contains(verify)
 }
