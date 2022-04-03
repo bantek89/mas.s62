@@ -28,6 +28,7 @@ func GetTipFromServer() (Block, error) {
 
 	connection, err := net.Dial("tcp", serverHostname)
 	if err != nil {
+		fmt.Println(err)
 		return bl, err
 	}
 	fmt.Printf("connected to server %s\n", connection.RemoteAddr().String())

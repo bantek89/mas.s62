@@ -76,6 +76,7 @@ func main() {
 
 	// Your code here!
 
+	GetTipFromServer()
 	// Basic idea:
 	// Get tip from server, mine a block pointing to that tip,
 	// then submit to server.
