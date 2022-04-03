@@ -1,6 +1,3 @@
-// You should not need to modify this file.  We will replace
-// main_test.go after submission, so all changes will be lost.
-
 package main
 
 import (
