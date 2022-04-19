@@ -73,15 +73,36 @@ func BlockFromString(s string) (Block, error) {
 func main() {
 
 	fmt.Printf("NameChain Miner v0.1\n")
+	foundChan := make(chan int)
 
 	// Your code here!
-
-	GetTipFromServer()
 	// Basic idea:
 	// Get tip from server, mine a block pointing to that tip,
 	// then submit to server.
 	// To reduce stales, poll the server every so often and update the
 	// tip you're mining off of if it has changed.
 
-	return
+	// go bl.Mine(33, foundChan)
+
+	// for {
+	bl, err := GetTipFromServer()
+	if err != nil {
+		panic(err)
+	}
+
+	// 	fmt.Printf("Start mining...\n")
+	// 	go bl.Mine(33, foundChan)
+
+	// }
+
+	for {
+		fmt.Printf("Start mining...\n")
+		select {
+		case <-foundChan:
+			return
+		default:
+			go bl.Mine(25, foundChan)
+		}
+	}
+
 }
