@@ -84,16 +84,10 @@ func main() {
 
 	// go bl.Mine(33, foundChan)
 
-	// for {
 	bl, err := GetTipFromServer()
 	if err != nil {
 		panic(err)
 	}
-
-	// 	fmt.Printf("Start mining...\n")
-	// 	go bl.Mine(33, foundChan)
-
-	// }
 
 	for {
 		fmt.Printf("Start mining...\n")

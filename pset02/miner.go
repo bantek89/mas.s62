@@ -30,6 +30,7 @@ func (self *Block) Mine(targetBits uint8, found chan int) {
 			fmt.Println(block)
 			SendBlockToServer(block)
 			found <- 0
+			close(found)
 			break
 		}
 		if time.Since(start).Seconds() > 5 {
