@@ -351,7 +351,7 @@ func HandleBlockSubmission(bc *BlockChain) {
 // Assumes "prev" block is OK, but checks "next"
 func CheckNextBlock(prev, next Block) bool {
 	// first check the work on the new block.  33 bits needed.
-	if !CheckWork(next, 25) {
+	if !CheckWork(next, 33) {
 		log.Printf("not enought work! ")
 		return false
 	}

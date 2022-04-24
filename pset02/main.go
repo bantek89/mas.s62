@@ -95,7 +95,7 @@ func main() {
 		case <-foundChan:
 			return
 		default:
-			go bl.Mine(25, foundChan)
+			go bl.Mine(33, foundChan)
 		}
 	}
 
